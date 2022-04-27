@@ -1,0 +1,124 @@
+body .region-content .heading3-with3 h3 {
+  padding: 10px 0px !important;
+}
+
+body .region-content .heading3-with3 {
+  margin-top: 50px !important;
+}
+
+body .region-content .heading2 h3 {
+    font-size: 3em;
+    font-weight: 900;
+    text-align: center;
+    margin: 30px 0px;
+}
+
+.img-center img{
+      display: block !important;
+    width: 100% !important;
+}
+
+.header-data-pc.table-layout ul.menu-lists, .header-data-mobile.table-layout ul.menu-lists {
+  display: table;
+  width: 100%;
+}
+
+.layout.main-visual-video {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  color: black;
+}
+
+.layout.main-visual-video video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#layout-builder .layout.main-visual-video video {
+  width: 100%;
+  height: 100vh;
+}
+
+.view.test-table {
+  border: 4px solid yellow;
+}
+
+.virtual-card-outer-wrapper .virtual-card-wrapper .photo {
+  top: auto;
+  bottom: 784px; 
+}
+
+.virtual-card-wrapper .photo img {
+  width: 100%;
+}
+
+header .switch-language {
+  display: none !important;
+}
+
+.virtual-card-wrapper .photo {
+  display: block !important;
+}
+
+.virtual-card-wrapper .photo img {
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+}
+
+.block.block-covid19-monitoring-main-menu .item-wrapper > a.completed.not-in-use > span:after {
+  display: block;
+  font-size: 3em;
+  font-family: 'Font Awesome\ 5 Free';
+  font-weight: 700;
+  width: 100%;
+  line-height: 1.4em;
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+}
+
+.block.block-covid19-monitoring-main-menu .item-wrapper > a.completed.not-in-use {
+  border-color: transparent;
+}
+
+.block.block-covid19-monitoring-main-menu .item-wrapper > a.completed.not-in-use:before {
+  background: transparent;
+}
+
+form.covid19-monitoring-access-control-cap-reader-form table.results .invalid, form.covid19-monitoring-access-control-visitor-walkin-form table.results .invalid {
+  color: #ed1b2f !important;
+}
+
+.virtual-card-wrapper .card-details {
+  top: -9999px !important; 
+}
+
+body .region-content .no-actions-required .view {
+  font-size: 1.28em;
+  line-height: 1.4em;
+}
+
+body .region-content .no-actions-required .view a.btn {
+  min-width: 0;
+}
+
+body .spb_center {
+  margin-left: -300px;
+}
+
+@media only screen and (max-width: 992px) {
+  body .spb_center {
+    margin-left: 20px;
+    min-width: calc(100% - 40px);
+    max-width: calc(100% - 40px);
+    top: 25%;
+    left: 0;
+  }
+}
