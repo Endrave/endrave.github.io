@@ -1,0 +1,280 @@
+<!DOCTYPE html><html><head>
+
+    <script src="p5.ble.js" type="text/javascript"></script>
+    <script src="d3.v5.js"></script>
+    <script src="fft.js"></script>
+    <script src="time.js"></script>
+    
+       <script src="Chart.min.js"></script>
+    
+ <style>
+.button1 {
+  padding: 15px 25px;
+  font-size: 24px;
+  text-align: center;
+  cursor: pointer;
+  outline: none;
+  color: #fff;
+  background-color: #446cc9;
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 9px #999;
+}
+
+.button1:hover {background-color:  #6288e3}
+
+.button1:active {
+  background-color:  #6288e3;
+  box-shadow: 0 5px #666;
+  transform: translateY(4px);
+}
+.button2 {
+  padding: 15px 25px;
+  font-size: 24px;
+  text-align: center;
+  cursor: pointer;
+  outline: none;
+  color: #fff;
+  background-color: #04AA6D;
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 9px #999;
+}
+
+.button2:hover {background-color: #3e8e41}
+
+.button2:active {
+  background-color: #3e8e41;
+  box-shadow: 0 5px #666;
+  transform: translateY(4px);
+}
+   
+
+   
+   
+</style> 
+    
+    <script>
+  
+      let data = [];
+      let record =[];
+      let label = [];
+      let label_counter = 0;
+      
+      let resistorChar;
+      let resistorValue =1;
+      var start, current;
+      
+      var real,img;
+      
+function startBLE(){      
+    navigator.bluetooth.requestDevice({ filters: [{ services: ['19b10011-e8f2-537e-4f6c-d104768a1214'] }] })
+.then(device => device.gatt.connect())
+.then(server => {
+  // Getting  Service…
+  return server.getPrimaryService('19b10011-e8f2-537e-4f6c-d104768a1214');
+})
+.then(service => {
+  // Getting  Level Characteristic…
+  return service.getCharacteristic('19b10012-e8f2-537e-4f6c-d104768a1214');
+})
+
+.then(characteristic => {
+      // Set up event listener for when characteristic value changes.
+  characteristic.addEventListener('characteristicvaluechanged',
+                                  handleLevelChanged);
+  characteristic.startNotifications();
+  
+  // start timer 
+       start=new Date();
+       timerFlag = true;
+  // Reading Battery Level…
+  return characteristic.readValue();
+})
+      
+// change digipot part      
+
+.then(serverR => {
+  // Getting  Service…
+  return server.getPrimaryService('19b10000-e8f2-537e-4f6c-d104768a1214');
+})
+.then(serviceR => {
+  // Getting  Characteristic…
+      
+  
+  return service.getCharacteristic('19b10001-e8f2-537e-4f6c-d104768a1214');
+ resistorChar = serviceR;
+    })
+.catch(error => { console.error(error); });   
+  
+}  
+      
+// // end of change digipot part   
+      
+async function handleLevelChanged(event) {
+  const batteryLevel = event.target.value.getUint16(2);
+  
+    data.push(batteryLevel); // Inverted
+    label.push(label_counter++);
+  
+  if (data.length >= 300) {
+    data.shift();
+    label.shift();
+    //count = 0;
+  }
+  current = new Date();
+  let temp = new Array(2);
+  temp[0]= (current.getTime()-start.getTime());
+  temp[1]= batteryLevel; 
+  record.push(temp);
+  chart.update();
+  FFTchart.update();
+  
+  console.log('signal: ' + batteryLevel);
+}
+      
+function onWriteButtonClick() {
+  if (!resistorChar) {
+    return;
+  }
+  if(resistorValue == 1){
+    resistorValue =0;
+  }else if (resistorValue == 0){
+    resistorValue =1;
+  }
+  resistorChar.writeValue(resistorValue)
+  
+  .then(_ => {
+    console.log('> Characteristic User Description changed to: ' + resistorValue);
+  })
+  .catch(error => {
+    console.log('Argh! ' + error);
+  });
+}      
+      
+// saving CSV
+      
+      function exportToCsv(filename, rows) {
+        
+        // add title
+        record[0]=["Time(ms)","value"];
+        
+        var processRow = function (row) {
+            var finalVal = '';
+            for (var j = 0; j < row.length; j++) {
+                var innerValue = row[j] === null ? '' :       row[j].toString();
+                if (row[j] instanceof Date) {
+                    innerValue = row[j].toLocaleString();
+                };
+                var result = innerValue.replace(/"/g, '""');
+                if (result.search(/("|,|\n)/g) >= 0)
+                    result = '"' + result + '"';
+                if (j > 0)
+                    finalVal += ',';
+                finalVal += result;
+            }
+            return finalVal + '\n';
+        };
+
+        var csvFile = '';
+        for (var i = 0; i < rows.length; i++) {
+            csvFile += processRow(rows[i]);
+        }
+
+        var blob = new Blob([csvFile], { type: 'text/csv;charset=utf-8;' });
+        if (navigator.msSaveBlob) { // IE 10+
+            navigator.msSaveBlob(blob, filename);
+        } else {
+            var link = document.createElement("a");
+            if (link.download !== undefined) { // feature detection
+                // Browsers that support HTML5 download attribute
+                var url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+    }
+      
+// end of saving CSV      
+      
+      function calcFFT(){
+        real = new Array(data.length);
+        img = new Array(data.length);
+        for(let i = 0; i < data.length ; i++){
+          real[i] = data[i];
+          img[i] = 0;
+        }
+        //console.log(data);
+        //console.log(real);
+        transform(real, img);
+        console.log(real);
+        console.log(img);
+       // FFTchart.update();
+      }
+      
+      
+      
+    </script>
+    
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta charset="utf-8">
+
+  </head>
+  <body>
+    
+<!--         <button type="button" onclick="calcFFT()">FFT</button> -->
+    
+    
+    
+
+    
+
+    <table>
+  <tbody><tr>
+    <th class="th"><div id="TableFont" align="left">
+      <img src="timer.svg" alt="timer_icon" height="22">Duration</div></th>
+  </tr>
+  <tr class="tr1">
+    <td height="70px"><div id="TableFont" align="center"><div id="timer"></div></div></td>
+  </tr>
+</tbody></table>
+<br>
+<table>
+  <tbody><tr>
+    <th class="th2"><div id="TableFont" align="left"><img src="chart.svg" alt="timer_icon" height="25">Realtime Chart</div></th>
+  </tr>
+  <tr class="tr1">
+    <td>
+      <div class="chart-container">
+    <canvas id="myChart"></canvas>
+      </div>
+</td>
+  </tr>
+</tbody></table>
+    
+<table> 
+  <tbody><tr>
+    <th>
+    <button class="button1" type="button" align="center" id="ble" onclick="startBLE()">Connect</button>
+     </th>
+    <th>
+          <button class="button2" type="button" align="center" onclick="exportToCsv('Export.csv', record)">Export CSV</button>
+      </th>
+    <th>
+          <button class="button1" type="button" align="center" onclick="window.location.href='https://preview.p5js.org/turnede0/present/olVLgFsvi'">Amplify </button>
+      </th>
+</tr>
+  
+  
+  </tbody></table>  
+
+  
+         <script src="sketch.js"></script>
+  
+<!--   <footer class ="footer">V.1</footer> -->
+
+</body></html>
